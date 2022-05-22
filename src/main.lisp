@@ -20,17 +20,18 @@
   (right nil :type maybe-bst))
 
 (defun bst-add (bst x)
-  "Produce a new BST with value X added to it."
+  "Produce this BST, mutated, with value X added to it."
   (if (null bst)
       (make-bst :value x)
       (let ((value (bst-value bst))
             (left  (bst-left  bst))
             (right (bst-right bst)))
         (cond
-          ((null value) (make-bst :value x))
-          ((< x value)  (make-bst :value value :right right :left  (bst-add left  x)))
-          ((> x value)  (make-bst :value value :left  left  :right (bst-add right x)))
-          (t            bst)))))
+          ((null value) (setf (bst-value bst) x))
+          ((< x value)  (setf (bst-left bst)  (bst-add left x)))
+          ((> x value)  (setf (bst-right bst) (bst-add right x)))
+          (t            bst))
+        bst)))
 
 (defun bst-contains (bst x)
   "Produce t if BST contains X."
@@ -55,18 +56,17 @@
            (t            value)))))
 
 (defun bst-remove (bst x)
-  "Produce a new BST with X removed from it."
+  "Produce this BST, mutated, with X removed from it."
   (and (not (null bst))
        (let ((value (bst-value bst))
              (left  (bst-left  bst))
              (right (bst-right bst)))
          (cond
            ((null value) bst)
-           ((< x value)  (make-bst :value value :right right :left  (bst-remove left  x)))
-           ((> x value)  (make-bst :value value :left  left  :right (bst-remove right x)))
+           ((< x value)  (setf (bst-left bst)  (bst-remove left  x)))
+           ((> x value)  (setf (bst-right bst) (bst-remove right x)))
            (t            (if right
                              (let ((smallest (bst-smallest right)))
-                               (make-bst :value smallest
-                                         :left left
-                                         :right (bst-remove right smallest)))
-                             left))))))
+                               (setf (bst-right bst) (bst-remove right smallest)))
+                             left)))
+         bst)))
