@@ -5,13 +5,14 @@
 ;; 
 ;; Binary Search Tree
 
-(defun maybe-bst-p (x)
-  "Produce t if X is a BST or NIL."
-  (or (bst-p x)
-      (eq nil x)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun maybe-bst-p (x)
+    "Produce t if X is a BST or NIL."
+    (or (bst-p x)
+        (eq nil x)))
 
-(deftype maybe-bst ()
-  '(satisfies maybe-bst-p))
+  (deftype maybe-bst ()
+    '(satisfies maybe-bst-p)))
 
 (defstruct bst
   (value nil :type t)
