@@ -40,8 +40,8 @@
              (right (bst-right bst)))
          (cond
            ((null value) nil)
-           ((< x value)  (contains left  x))
-           ((> x value)  (contains right x))
+           ((< x value)  (bst-contains left  x))
+           ((> x value)  (bst-contains right x))
            (t            t)))))
 
 (defun bst-smallest (bst)
@@ -51,7 +51,7 @@
              (left  (bst-left  bst)))
          (cond
            ((null value) nil)
-           (left         (smallest left))
+           (left         (bst-smallest left))
            (t            value)))))
 
 (defun bst-remove (bst x)
