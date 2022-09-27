@@ -19,10 +19,12 @@
   (make-resizing-vector :xs (make-array len :fill-pointer 0)))
 
 (defun vector-push++ (y xs)
+  (declare (type resizing-vector xs))
   "Push Y into the *resizing* vector XS.
 
 If there isn't enough room in XS, then double the size of XS and then
 push the element."
+  (declare (type resizing-vector xs))
   (let* ((elements  #1=(resizing-vector-xs xs))
          (capacity  (array-dimension elements 0))
          (taken     (fill-pointer elements)))
@@ -34,6 +36,7 @@ push the element."
 
 (defun vector-pop++ (xs)
   "Pop an element from the resizing vector XS."
+  (declare (type resizing-vector xs))
   (vector-pop (resizing-vector-xs xs)))
 
 #+nil
@@ -155,6 +158,7 @@ push the element."
 
 (defun graph-push (graph start end)
   "Add an edge in GRAPH from START to END."
+  (declare (type graph graph))
   (let* ((max-edge (max start end))
          (curr-len (length #1=(graph-edges graph))))
     (when (< curr-len max-edge)
@@ -164,9 +168,61 @@ push the element."
 
 (defun graph-get (graph vertex)
   "Get the list of edges in GRAPH starting at VERTEX."
+  (declare (type graph graph))
   (aref (graph-edges graph) vertex))
 
 (defun graph-bi-push (graph start end)
   "Add edges in GRAPH from START to END and END to START."
-  (graph-push graph start end)
-  (graph-push graph end   start))
+  (declare (type graph graph))
+  (progn
+    (graph-push graph start end)
+    (graph-push graph end   start)))
+
+;; 
+;; # Union Find
+
+(defstruct union-find
+  (elements (vector) :type vector))
+
+(defun initialise-union-find (length)
+  "Create a union find of a given LENGTH."
+  (let ((xs (make-array (list length))))
+    (dotimes (i length)
+      (setf (aref xs i) i))
+    (make-union-find :elements xs)))
+
+(defun union-set (x y set)
+  "Make X and Y part of the same set in SET."
+  (declare (type union-find set))
+  (setf (aref (union-find-elements set) x)
+        (union-set-parent y set)))
+
+(defun union-set-parent (x set)
+  "Find the parent of X in SET."
+  (declare (type union-find set))
+  (let ((elements (union-find-elements set)))
+    (do ((i (aref elements x) (aref elements i))) ((eq i (aref elements i)) i)
+      (format t "i: ~a~%" i))))
+
+(defun find-set (x set)
+  "Produce the name of the set that X belongs to in SET."
+  (declare (type union-find set))
+  (union-set-parent x set))
+
+(defun is-same-set (x y set)
+  "Produce t if X and Y are in the same component in SET."
+  (declare (type union-find set))
+  (eq (find-set x set)
+      (find-set y set)))
+
+#+nil
+(let ((x (initialise-union-find 5)))
+  (format t "x: ~a~%" x)
+  (union-set 0 1 x)
+  (format t "x: ~a~%" x)
+  (union-set 1 2 x)
+  (format t "x: ~a~%" x)
+  (union-set 3 1 x)
+  (format t "x: ~a~%" x)
+  (format t "(find-set 0): ~a~%" (find-set 0 x))
+  (format t "(is-same-set 0 4): ~a~%" (is-same-set 0 4 x)))
