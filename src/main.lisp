@@ -226,3 +226,22 @@ push the element."
   (format t "x: ~a~%" x)
   (format t "(find-set 0): ~a~%" (find-set 0 x))
   (format t "(is-same-set 0 4): ~a~%" (is-same-set 0 4 x)))
+
+;;; 
+;; # Segment Tree
+
+(defstruct segment-tree
+  (tree (vector) :type vector))
+
+(defun create-segment-tree (xs)
+  "Create an indexed data structure to answer range queries about XS."
+  (let* ((tree (make-array (list (length xs)) :initial-element 0)))
+    (labels ((recur (i l r)
+               (if (= l r)
+                   (setf (aref tree l) i)
+                   (let* ((il (* 2 i))
+                          (ir (1+ il)))
+                     (recur il l                      (floor (+ l r) 2))
+                     (recur ir (1+ (floor (+ l r) 2)) r)
+                     (setf (aref tree l) )))))
+      (recur 1 0 (1- (length xs))))))
