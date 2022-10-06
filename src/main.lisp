@@ -231,11 +231,15 @@ push the element."
 ;; # Segment Tree
 
 (defstruct segment-tree
-  (tree (vector) :type vector))
+  (tree  (vector) :type vector)
+  (elems (vector) :type vector))
 
 (defun create-segment-tree (xs)
   "Create an indexed data structure to answer range queries about XS."
-  (let* ((tree (make-array (list (length xs)) :initial-element 0)))
+  (declare (type vector xs))
+  (let* ((tree (make-array (list (1+ (* 2 (expt 2 (floor (log (length xs))
+                                                         (log 2))))))
+                           :initial-element 0)))
     (labels ((recur (i l r)
                (if (= l r)
                    (setf (aref tree l) i)
@@ -243,5 +247,28 @@ push the element."
                           (ir (1+ il)))
                      (recur il l                      (floor (+ l r) 2))
                      (recur ir (1+ (floor (+ l r) 2)) r)
-                     (setf (aref tree l) )))))
-      (recur 1 0 (1- (length xs))))))
+                     (setf (aref tree i)
+                           (let ((lIndex (aref tree il))
+                                 (rIndex (aref tree ir)))
+                             (if (< (aref xs lIndex)
+                                    (aref xs rIndex))
+                                 lIndex
+                                 rIndex)))))))
+      (recur 1 0 (1- (length xs))))
+    (make-segment-tree :tree tree :elems xs)))
+
+(defun range-minimum-query (tree i j)
+  "Produce the index of the minimum element in TREE between I & J."
+  (declare (type segment-tree tree)
+           (type fixnum i j))
+  (let ((t  (segment-tree-tree tree))
+        (xs (segment-tree-elems tree)))
+    (labels ((recur (l h)
+               ;; - [ ] Base cases
+               (let* ((lh (floor (+ l h) 2))
+                      (hl (1+ lh)))
+                 ;;  - [ ] Check which sub intervals are inside.
+                 ;;  - [ ] Find their mins.
+                 ;;  - [ ] Take min of mins.
+                 ())))
+      (recurn 0 (1- (length xs))))))
