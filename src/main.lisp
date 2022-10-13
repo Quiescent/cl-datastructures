@@ -237,8 +237,7 @@ push the element."
 (defun create-segment-tree (xs)
   "Create an indexed data structure to answer range queries about XS."
   (declare (type vector xs))
-  (let* ((tree (make-array (list (1+ (* 2 (expt 2 (floor (log (length xs))
-                                                         (log 2))))))
+  (let* ((tree (make-array (list (* 2 (expt 2 (1+ (floor (log (length xs) 2))))))
                            :initial-element 0)))
     (labels ((recur (i l r)
                (if (= l r)
@@ -261,14 +260,28 @@ push the element."
   "Produce the index of the minimum element in TREE between I & J."
   (declare (type segment-tree tree)
            (type fixnum i j))
-  (let ((t  (segment-tree-tree tree))
+  (let ((ts (segment-tree-tree tree))
         (xs (segment-tree-elems tree)))
-    (labels ((recur (l h)
-               ;; - [ ] Base cases
-               (let* ((lh (floor (+ l h) 2))
-                      (hl (1+ lh)))
-                 ;;  - [ ] Check which sub intervals are inside.
-                 ;;  - [ ] Find their mins.
-                 ;;  - [ ] Take min of mins.
-                 ())))
-      (recurn 0 (1- (length xs))))))
+    (labels ((recur (v l h)
+               (cond
+                 ((or (> i h) (< j l))  nil)
+                 ((and (< h j) (> l i)) (aref ts v))
+                 (t
+                  (let* ((lh (floor (+ l h) 2))
+                         (hl (1+ lh)))
+                    ;; low sub interval is l-lh
+                    ;; high sub interval is hl-h
+                    ;; LEFT
+                    (let ((l-min (recur (* 2 v)      lh l))
+                          (h-min (recur (1+ (* 2 v)) hl h)))
+                      (cond
+                        ((null l-min)                        h-min)
+                        ((null h-min)                        l-min)
+                        ((< (aref xs l-min) (aref xs h-min)) l-min)
+                        (t                                   h-min))))))))
+      (recur 1 0 (1- (length xs))))))
+
+#+nil
+(let ((tree (create-segment-tree #(8 7 3 9 5 1 10))))
+  (format t "(segment-tree-tree tree): ~a~%" (segment-tree-tree tree))
+  (format t "(segment-tree-elems tree): ~a~%" (segment-tree-elems tree)))
