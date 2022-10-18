@@ -241,7 +241,7 @@ push the element."
                            :initial-element 0)))
     (labels ((recur (i l r)
                (if (= l r)
-                   (setf (aref tree l) i)
+                   (setf (aref tree i) l)
                    (let* ((il (* 2 i))
                           (ir (1+ il)))
                      (recur il l                      (floor (+ l r) 2))
@@ -265,14 +265,13 @@ push the element."
     (labels ((recur (v l h)
                (cond
                  ((or (> i h) (< j l))  nil)
-                 ((and (< h j) (> l i)) (aref ts v))
+                 ((and (<= h j) (>= l i)) (aref ts v))
                  (t
                   (let* ((lh (floor (+ l h) 2))
                          (hl (1+ lh)))
                     ;; low sub interval is l-lh
                     ;; high sub interval is hl-h
-                    ;; LEFT
-                    (let ((l-min (recur (* 2 v)      lh l))
+                    (let ((l-min (recur (* 2 v)      l lh))
                           (h-min (recur (1+ (* 2 v)) hl h)))
                       (cond
                         ((null l-min)                        h-min)
@@ -284,4 +283,5 @@ push the element."
 #+nil
 (let ((tree (create-segment-tree #(8 7 3 9 5 1 10))))
   (format t "(segment-tree-tree tree): ~a~%" (segment-tree-tree tree))
-  (format t "(segment-tree-elems tree): ~a~%" (segment-tree-elems tree)))
+  (format t "(segment-tree-elems tree): ~a~%" (segment-tree-elems tree))
+  (format t "(range-minimum-query tree 1 3): ~a~%" (range-minimum-query tree 1 3)))
