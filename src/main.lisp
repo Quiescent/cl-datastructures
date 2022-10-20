@@ -285,3 +285,28 @@ push the element."
   (format t "(segment-tree-tree tree): ~a~%" (segment-tree-tree tree))
   (format t "(segment-tree-elems tree): ~a~%" (segment-tree-elems tree))
   (format t "(range-minimum-query tree 1 3): ~a~%" (range-minimum-query tree 1 3)))
+
+;; 
+;; # Fenwick Tree
+
+(defstruct fenwick-tree
+  (xs (vector) :type vector))
+
+(defun create-fenwick-tree (length)
+  "Create a fenwick tree with the given LENGTH."
+  (declare (type fixnum length))
+  (make-fenwick-tree :xs (make-array (list length) :initial-element 0)))
+
+(defun ls-one (x)
+  "Produce the least significant bit of X."
+  (declare (type fixnum x))
+  (logand x (- 0 x)))
+
+(defun range-sum-query (tree upper)
+  "Produce the sum of elements in TREE in the range [0, UPPER]."
+  (declare (type fenwick-tree tree)
+           (type fixnum upper))
+  (do* ((xs  (fenwick-tree-xs tree))
+        (i   upper                  (- i (ls-one i)))
+        (sum (aref xs i)            (+ sum (aref xs i))))
+       ((>= i (length xs)) sum)))
