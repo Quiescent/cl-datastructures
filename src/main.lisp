@@ -309,4 +309,21 @@ push the element."
   (do* ((xs  (fenwick-tree-xs tree))
         (i   upper                  (- i (ls-one i)))
         (sum (aref xs i)            (+ sum (aref xs i))))
-       ((>= i (length xs)) sum)))
+       ((= i 0) sum)))
+
+(defun add-to-fenwick-tree (tree index amount)
+  "Increment values in TREE after INDEX by AMOUNT."
+  (declare (type fenwick-tree tree)
+           (type fixnum index amount))
+  (do ((i  index (+ i (ls-one i)))
+       (xs (fenwick-tree-xs tree)))
+      ((>= i (length (fenwick-tree-xs tree))) tree)
+    (incf (aref xs i) amount)))
+
+#+nil
+(let ((tree (create-fenwick-tree 12)))
+  (dotimes (i 10)
+    (add-to-fenwick-tree tree (1+ i) 1))
+  (format t "(fenwick-tree-xs tree): ~a~%" (fenwick-tree-xs tree))
+  (dotimes (i 10)
+    (format t "(range-sum-query tree i): ~a~%" (range-sum-query tree i))))
