@@ -327,3 +327,53 @@ push the element."
   (format t "(fenwick-tree-xs tree): ~a~%" (fenwick-tree-xs tree))
   (dotimes (i 10)
     (format t "(range-sum-query tree i): ~a~%" (range-sum-query tree i))))
+
+;; 
+;; Queue
+
+(defstruct queue
+  (tail nil :type list)
+  (head nil :type list))
+
+(defun enqueue (queue x)
+  "Enqueue X onto QUEUE."
+  (declare (type queue queue))
+  (let ((head (queue-head queue)))
+    (if (eq head nil)
+        (progn
+          (push x (queue-head queue))
+          (setf (queue-tail queue) (queue-head queue)))
+        (progn
+          (setf (cdr (queue-tail queue)) (cons x nil))
+          (setf (queue-tail queue) (cdr (queue-tail queue)))))))
+
+(defun dequeue (queue)
+  "Dequeue an element from the front of QUEUE."
+  (pop (queue-head queue)))
+
+#+nil
+(let ((q (make-queue)))
+  (enqueue q 1)
+  (format t "q: ~a~%" q)
+  (print (dequeue q))
+  (enqueue q 1)
+  (format t "q: ~a~%" q)
+  (enqueue q 2)
+  (enqueue q 3)
+  (format t "q: ~a~%" q)
+  (print (dequeue q))
+  (print (dequeue q))
+  (print (dequeue q))
+  (print (dequeue q))
+  (format t "q: ~a~%" q)
+  (enqueue q 1)
+  (format t "q: ~a~%" q))
+
+#+nil
+(let ((xs (make-array (list 1) :fill-pointer 0 :adjustable t)))
+  (format t "(type-of xs): ~a~%" (type-of xs))
+  (format t "(fill-pointer xs): ~a~%" (fill-pointer xs))
+  (vector-push-extend 1 xs)
+  (format t "(fill-pointer xs): ~a~%" (fill-pointer xs))
+  (vector-push-extend 2 xs)
+  (format t "(fill-pointer xs): ~a~%" (fill-pointer xs)))
