@@ -161,8 +161,10 @@ push the element."
   (declare (type graph graph))
   (let* ((max-edge (max start end))
          (curr-len (length #1=(graph-edges graph))))
-    (when (< curr-len max-edge)
-      (setf #1# (adjust-array #1# (list (* 2 curr-len)))))
+    (when (< curr-len (1+ max-edge))
+      (setf #1# (adjust-array #1#
+                              (list (* 2 (if (= 0 curr-len) 1 curr-len)))
+                              :initial-element (list))))
     (when (not (member end (aref #1# start)))
       (push end (aref #1# start)))))
 
@@ -177,6 +179,36 @@ push the element."
   (progn
     (graph-push graph start end)
     (graph-push graph end   start)))
+
+(defun graph-vertex-count (graph)
+  "Produce the number of vertices in GRAPH."
+  (length (graph-edges graph)))
+
+(defun dfs (graph start)
+  "Perform DFS on GRAPH from START.
+
+Produces an array that indicates where we came from to reach each
+node."
+  (let ((parents (make-array (list (graph-vertex-count graph))
+                             :initial-element nil)))
+    (setf (aref parents start) start)
+    (labels ((recur (current)
+               (dolist (next (graph-get graph current) parents)
+                 (when (null #1=(aref parents next))
+                   (setf #1# current)
+                   (recur next)))))
+      (recur start))))
+
+#+nil
+(let ((graph (make-graph)))
+  (graph-bi-push graph 0 1)
+  (graph-bi-push graph 1 2)
+  (graph-bi-push graph 1 3)
+  (graph-bi-push graph 3 4)
+  (graph-bi-push graph 7 6)
+  (graph-bi-push graph 6 8)
+  (format t "graph: ~a~%" graph)
+  (format t "(dfs graph 0): ~a~%" (dfs graph 0)))
 
 ;; 
 ;; # Union Find
