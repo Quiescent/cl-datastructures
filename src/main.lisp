@@ -210,6 +210,39 @@ node."
   (format t "graph: ~a~%" graph)
   (format t "(dfs graph 0): ~a~%" (dfs graph 0)))
 
+(defun bfs (graph start)
+  "Perform a breadth first search of GRAPH from START.
+
+Produce a cons cell containing an array of the number of hops to reach
+each vertex and the parent that immediately preceeded each vertex
+during the search."
+  (do* ((remaining (let ((q (make-queue)))
+                     (enqueue q start)
+                     q))
+        (count (graph-vertex-count graph))
+        (parents (make-array (list count) :initial-element nil))
+        (distance (let ((dist (make-array (list count) :initial-element -1)))
+                    (setf (aref dist start) 0)
+                    dist)))
+       ((queue-empty remaining) (cons distance parents))
+    (let ((current (dequeue remaining)))
+      (dolist (end (graph-get graph current))
+        (when (= -1 (aref distance end))
+          (enqueue remaining end)
+          (setf (aref parents end) current)
+          (setf (aref distance end) (1+ (aref distance current))))))))
+
+#+nil
+(let ((graph (make-graph)))
+  (graph-bi-push graph 0 1)
+  (graph-bi-push graph 1 2)
+  (graph-bi-push graph 1 3)
+  (graph-bi-push graph 3 4)
+  (graph-bi-push graph 7 6)
+  (graph-bi-push graph 6 8)
+  (format t "graph: ~a~%" graph)
+  (format t "(bfs graph 0): ~a~%" (bfs graph 0)))
+
 ;; 
 ;; # Union Find
 
@@ -382,6 +415,10 @@ node."
 (defun dequeue (queue)
   "Dequeue an element from the front of QUEUE."
   (pop (queue-head queue)))
+
+(defun queue-empty (queue)
+  "Produce t if QUEUE is empty."
+  (null (queue-head queue)))
 
 #+nil
 (let ((q (make-queue)))
