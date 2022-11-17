@@ -451,3 +451,15 @@ during the search."
   (format t "(fill-pointer xs): ~a~%" (fill-pointer xs))
   (vector-push-extend 2 xs)
   (format t "(fill-pointer xs): ~a~%" (fill-pointer xs)))
+
+;; #
+;; Heap
+
+(defstruct heap
+  (elems (vector) :type vector)
+  (size 0 :type fixnum)
+  (key #'identity :type (function (t) t))
+  (less #'< :type (function (t t) t)))
+
+(defun insert (heap x)
+  "Insert X into HEAP.")
