@@ -182,6 +182,7 @@ push the element."
 
 (defun graph-vertex-count (graph)
   "Produce the number of vertices in GRAPH."
+  (declare (type graph graph))
   (length (graph-edges graph)))
 
 (defun dfs (graph start)
@@ -189,6 +190,7 @@ push the element."
 
 Produces an array that indicates where we came from to reach each
 node."
+  (declare (type graph graph))
   (let ((parents (make-array (list (graph-vertex-count graph))
                              :initial-element nil)))
     (setf (aref parents start) start)
@@ -216,6 +218,7 @@ node."
 Produce a cons cell containing an array of the number of hops to reach
 each vertex and the parent that immediately preceeded each vertex
 during the search."
+  (declare (type graph graph))
   (do* ((remaining (let ((q (make-queue)))
                      (enqueue q start)
                      q))
@@ -414,10 +417,12 @@ during the search."
 
 (defun dequeue (queue)
   "Dequeue an element from the front of QUEUE."
+  (declare (type queue queue))
   (pop (queue-head queue)))
 
 (defun queue-empty (queue)
   "Produce t if QUEUE is empty."
+  (declare (type queue queue))
   (null (queue-head queue)))
 
 #+nil
