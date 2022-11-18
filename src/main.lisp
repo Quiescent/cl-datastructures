@@ -459,7 +459,49 @@ during the search."
   (elems (vector) :type vector)
   (size 0 :type fixnum)
   (key #'identity :type (function (t) t))
-  (less #'< :type (function (t t) t)))
+  (less #'< :type (function (t t) boolean)))
+
+(defun create-heap (&key key less)
+  "Make a heap.
+
+KEY defaults to IDENTITY and LESS defaults to <."
+  (let ((the-key (the (function (t) t) (or key #'identity)))
+        (the-less (the (function (t t) boolean) (or less #'<))))
+    (make-heap :elems (make-array (list 1)
+                                  :adjustable t
+                                  :fill-pointer 1
+                                  :initial-contents '(nil))
+               :size 0
+               :key the-key
+               :less the-less)))
 
 (defun insert (heap x)
-  "Insert X into HEAP.")
+  "Insert X into HEAP."
+  (declare (type heap heap))
+  (let ((elems (heap-elems heap))
+        (key (heap-key heap))
+        (less (heap-less heap)))
+    (vector-push-extend x elems (length elems))
+    (incf (heap-size heap))
+    (labels ((swim (i)
+               (when (/= i 1)
+                 (let* ((elem #1=(aref elems i))
+                        (parent #2=(aref elems (floor i 2))))
+                   (when (funcall less
+                                  (funcall key elem)
+                                  (funcall key parent))
+                     (rotatef #1# #2#)
+                     (swim (floor i 2)))))))
+      (swim (heap-size heap)))))
+
+#+nil
+(let ((heap (create-heap)))
+  (format t "heap: ~a~%" heap)
+  (insert heap 9)
+  (format t "heap: ~a~%" heap)
+  (insert heap 5)
+  (format t "heap: ~a~%" heap)
+  (insert heap 1)
+  (format t "heap: ~a~%" heap)
+  (insert heap 2)
+  (format t "heap: ~a~%" heap))
