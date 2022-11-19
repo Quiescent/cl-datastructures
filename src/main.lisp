@@ -246,25 +246,65 @@ during the search."
   (format t "graph: ~a~%" graph)
   (format t "(bfs graph 0): ~a~%" (bfs graph 0)))
 
+(defstruct digraph
+  (edges (vector) :type vector))
+
+(defun digraph-push (graph start end distance)
+  "Add an edge in GRAPH from START to END.
+
+The edge has a weight of DISTANCE."
+  (declare (type digraph graph))
+  (let* ((max-edge (max start end))
+         (curr-len (length #1=(digraph-edges graph))))
+    (when (< curr-len (1+ max-edge))
+      (setf #1# (adjust-array #1#
+                              (list (* 2 (if (= 0 curr-len) 1 curr-len)))
+                              :initial-element (list))))
+    (when (not (member end (aref #1# start) :key #'cdr))
+      (push (cons distance end) (aref #1# start)))))
+
+(defun digraph-get (graph vertex)
+  "Get the list of edges in GRAPH starting at VERTEX."
+  (declare (type graph digraph))
+  (aref (digraph-edges graph) vertex))
+
 (defun dijkstra (graph start)
   "Perform dijkstra's algorithm on GRAPH from START.
 
 Produce a cons cell with an array containing the distance to each node
 in the graph and what parent was used to get there."
-  (do ((parent (let ((ps (make-array (list (length (graph-edges graph)))
-                                     :initial-element nil)))
-                 (setf (aref ps start) start)
-                 ps))
-       (distance (let ((d (make-array (list (length (graph-edges graph)))
-                                      :initial-element -1)))
-                   (setf (aref d start) 0)
-                   d))
-       (next (let ((q (create-heap :key #'car)))
-               (insert q (cons 0 start))
-               q)))
-      ((not (heap-empty next)) (cons distance parent))
-    (destructuring-bind (distance . i) (del-min next)
-      )))
+  (declare (type graph digraph))
+  (let ((parent (make-array (list (length (digraph-edges graph)))
+                            :initial-element nil))
+        (distance (make-array (list (length (digraph-edges graph)))
+                              :initial-element most-positive-fixnum))
+        (next (create-heap :key #'car)))
+    (setf (aref parent start) start)
+    (setf (aref distance start) 0)
+    (insert next (cons 0 start))
+    (do ()
+        ((heap-empty next) (cons distance parent))
+      (destructuring-bind (d . i) (del-min next)
+        (when (= d (aref distance i))
+          (dolist (dest-cell (digraph-get graph i))
+            (let ((new-d (+ d (car dest-cell)))
+                  (new-i (cdr dest-cell)))
+              (when (< new-d (aref distance new-i))
+                (setf (aref distance new-i) new-d)
+                (setf (aref parent new-i) i)
+                (insert next (cons new-d new-i))))))))))
+
+#+nil
+(let ((graph (make-digraph)))
+  (digraph-push graph 0 4 1)
+  (digraph-push graph 1 3 3)
+  (digraph-push graph 1 4 6)
+  (digraph-push graph 2 0 6)
+  (digraph-push graph 2 1 2)
+  (digraph-push graph 2 3 7)
+  (digraph-push graph 3 4 5)
+  (format t "graph: ~a~%" graph)
+  (format t "(dijkstra graph 2): ~a~%" (dijkstra graph 2)))
 
 ;; 
 ;; # Union Find
@@ -546,7 +586,7 @@ KEY defaults to IDENTITY and LESS defaults to <."
                         (left (when (<= l size) (funcall key #1=(aref elems l))))
                         (r (1+ (* 2 i)))
                         (right (when (<= r size) (funcall key #2=(aref elems r))))
-                        (current #3=(aref elems i)))
+                        (current (funcall key #3=(aref elems i))))
                    (cond
                      ((not (or left right)) nil)
                      ((and left right)
