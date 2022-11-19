@@ -246,6 +246,26 @@ during the search."
   (format t "graph: ~a~%" graph)
   (format t "(bfs graph 0): ~a~%" (bfs graph 0)))
 
+(defun dijkstra (graph start)
+  "Perform dijkstra's algorithm on GRAPH from START.
+
+Produce a cons cell with an array containing the distance to each node
+in the graph and what parent was used to get there."
+  (do ((parent (let ((ps (make-array (list (length (graph-edges graph)))
+                                     :initial-element nil)))
+                 (setf (aref ps start) start)
+                 ps))
+       (distance (let ((d (make-array (list (length (graph-edges graph)))
+                                      :initial-element -1)))
+                   (setf (aref d start) 0)
+                   d))
+       (next (let ((q (create-heap :key #'car)))
+               (insert q (cons 0 start))
+               q)))
+      ((not (heap-empty next)) (cons distance parent))
+    (destructuring-bind (distance . i) (del-min next)
+      )))
+
 ;; 
 ;; # Union Find
 
@@ -457,9 +477,13 @@ during the search."
 
 (defstruct heap
   (elems (vector) :type vector)
-  (size 0 :type fixnum)
   (key #'identity :type (function (t) t))
   (less #'< :type (function (t t) boolean)))
+
+(defun heap-empty (heap)
+  "Produce t if the heap is empty."
+  (declare (type heap heap))
+  (= 1 (fill-pointer (heap-elems heap))))
 
 (defun create-heap (&key key less)
   "Make a heap.
@@ -471,31 +495,32 @@ KEY defaults to IDENTITY and LESS defaults to <."
                                   :adjustable t
                                   :fill-pointer 1
                                   :initial-contents '(nil))
-               :size 0
                :key the-key
                :less the-less)))
 
 (defun insert (heap x)
   "Insert X into HEAP."
   (declare (type heap heap))
-  (let ((elems (heap-elems heap))
-        (key (heap-key heap))
+  (let ((key (heap-key heap))
         (less (heap-less heap)))
-    (vector-push-extend x elems (length elems))
-    (incf (heap-size heap))
-    (labels ((swim (i)
-               (when (/= i 1)
-                 (let* ((elem #1=(aref elems i))
-                        (parent #2=(aref elems (floor i 2))))
-                   (when (funcall less
-                                  (funcall key elem)
-                                  (funcall key parent))
-                     (rotatef #1# #2#)
-                     (swim (floor i 2)))))))
-      (swim (heap-size heap)))))
+    (vector-push-extend x
+                        (heap-elems heap)
+                        (* 2 (fill-pointer (heap-elems heap))))
+    (let ((elems (heap-elems heap)))
+      (labels ((swim (i)
+                 (when (/= i 1)
+                   (let* ((elem #1=(aref elems i))
+                          (parent #2=(aref elems (floor i 2))))
+                     (when (funcall less
+                                    (funcall key elem)
+                                    (funcall key parent))
+                       (rotatef #1# #2#)
+                       (swim (floor i 2)))))))
+        (swim (1- (fill-pointer elems)))))))
 
 #+nil
 (let ((heap (create-heap)))
+  (format t "====================START====================~%" )
   (format t "heap: ~a~%" heap)
   (insert heap 9)
   (format t "heap: ~a~%" heap)
@@ -504,4 +529,60 @@ KEY defaults to IDENTITY and LESS defaults to <."
   (insert heap 1)
   (format t "heap: ~a~%" heap)
   (insert heap 2)
+  (format t "heap: ~a~%" heap))
+
+(defun del-min (heap)
+  "Delete the minimum element from HEAP and produce that element."
+  (let ((elems (heap-elems heap))
+        (key (heap-key heap))
+        (less (heap-less heap)))
+    (prog1
+        (aref elems 1)
+      (rotatef (aref elems 1) (aref elems (1- (fill-pointer elems))))
+      (vector-pop elems)
+      (labels ((sink (i)
+                 (let* ((size (1- (fill-pointer elems)))
+                        (l (* 2 i))
+                        (left (when (<= l size) (funcall key #1=(aref elems l))))
+                        (r (1+ (* 2 i)))
+                        (right (when (<= r size) (funcall key #2=(aref elems r))))
+                        (current #3=(aref elems i)))
+                   (cond
+                     ((not (or left right)) nil)
+                     ((and left right)
+                      (cond
+                        ((and (not (funcall less left current))
+                              (not (funcall less right current)))
+                         nil)
+                        ((funcall less left right) (rotatef #1# #3#))
+                        (t (rotatef #2# #3#))))
+                     (left (when (funcall less left current)
+                             (rotatef #1# #3#)))
+                     (right (when (funcall less right current)
+                              (rotatef #2# #3#)))))))
+        (sink 1)))))
+
+#+nil
+(let ((heap (create-heap)))
+  (format t "====================START====================~%" )
+  (insert heap 9)
+  (insert heap 5)
+  (insert heap 1)
+  (insert heap 2)
+  (format t "heap: ~a~%" heap)
+  (format t "(del-min heap): ~a~%" (del-min heap))
+  (format t "heap: ~a~%" heap)
+  (format t "(del-min heap): ~a~%" (del-min heap))
+  (format t "heap: ~a~%" heap)
+  (format t "(del-min heap): ~a~%" (del-min heap))
+  (format t "heap: ~a~%" heap)
+  (format t "(del-min heap): ~a~%" (del-min heap))
+  (format t "heap: ~a~%" heap)
+  (insert heap 2)
+  (format t "heap: ~a~%" heap)
+  (insert heap 1)
+  (format t "heap: ~a~%" heap)
+  (insert heap 5)
+  (format t "heap: ~a~%" heap)
+  (insert heap 9)
   (format t "heap: ~a~%" heap))
