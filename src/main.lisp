@@ -1,5 +1,7 @@
 (defpackage datastructures
-  (:use :cl))
+  (:use :cl)
+  (:export :create-heap :insert :del-min
+           :make-queue :enqueue :dequeue :queue-empty))
 (in-package :datastructures)
 
 ;; 
